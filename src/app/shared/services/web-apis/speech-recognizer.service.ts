@@ -22,4 +22,12 @@ export class SpeechRecognizerService {
     this.recognition.lang = language;
   }
   
+  start(): void {
+    this.recognition.start();
+    this.isListening = true;
+  }
+
+  stop(): void {
+    this.recognition.stop();
+  }
 }
