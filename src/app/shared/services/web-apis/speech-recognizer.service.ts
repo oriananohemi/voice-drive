@@ -46,7 +46,18 @@ export class SpeechRecognizerService {
     })
   }
 
-  onEnd(): Observable<SpeechNotification<string>> {
+  onEnd(): Observable<SpeechNotification<never>> {
+    return new Observable(observer => {
+      this.recognition.onend = () => {
+        observer.next({
+          event: SpeechEvent.End
+        });
+        this.isListening = false;
+      }
+    })
+  }
+
+  onResult(): Observable<SpeechNotification<string>> {
     return new Observable(observer => {
       this.recognition.onresult = (event: SpeechRecognitionEvent) => {
         let interimContent = '';
