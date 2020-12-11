@@ -4,6 +4,22 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class SpeechRecognizerService {
+  recognition: SpeechRecognition;
+  language: string;
+  isListening = false;
 
   constructor() { }
+
+  initialize(language: string): void {
+    this.recognition =  new webkitSpeechRecognition();
+    this.recognition.continuous = true;
+    this.recognition.interimResults = true;
+    this.setLanguage(language)
+  }
+
+  setLanguage(language: string): void {
+    this.language = language;
+    this.recognition.lang = language;
+  }
+  
 }
