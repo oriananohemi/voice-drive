@@ -16,7 +16,7 @@ import { SpeechRecognizerService } from '../shared/services/web-apis/speech-reco
 export class WebSpeechComponent implements OnInit {
   languages: string[] = languages;
   currentLanguage = new FormControl(defaultLanguage);
-  totalTranscript: string;
+  totalTranscript = new FormControl('');
 
   transcript$: Observable<string>;
   listening$: Observable<boolean>;
@@ -56,9 +56,10 @@ export class WebSpeechComponent implements OnInit {
     this.transcript$ = this.speechRecognizer.onResult().pipe(
       tap((notification) => {
         if (notification.event === SpeechEvent.FinalContent) {
-          this.totalTranscript = this.totalTranscript
-            ? `${this.totalTranscript}\n${notification.content?.trim()}`
-            : notification.content;
+          const transcript = this.totalTranscript.value
+          ? `${this.totalTranscript.value}\n${notification.content?.trim()}`
+          : notification.content;
+          this.totalTranscript.setValue(transcript);
         }
       }),
       map((notification) => notification.content || '')
