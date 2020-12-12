@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { merge, Observable, Subject } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { defaultLanguage, languages } from '../shared/model/languages';
+import { SpeechError } from '../shared/model/speech-error';
+import { SpeechEvent } from '../shared/model/speech-event';
 import { SpeechRecognizerService } from '../shared/services/web-apis/speech-recognizer.service';
 
 @Component({
@@ -47,5 +50,54 @@ export class WebSpeechComponent implements OnInit {
 
     this.currentLanguage = language;
     this.speechRecognizer.setLanguage(this.currentLanguage)
+  }
+
+  private initRecognition(): void {
+    this.transcript$ = this.speechRecognizer.onResult().pipe(
+      tap((notification) => {
+        if(notification.event === SpeechEvent.FinalContent) {
+          this.totalTranscript = this.totalTranscript 
+          ? `${this.totalTranscript}\n${notification.content?.trim()}`
+          : notification.content;
+        }
+      }),
+      map((notification) => notification.content || '')
+    );
+
+    this.listening$ = merge(
+      this.speechRecognizer.onStart(),
+      this.speechRecognizer.onEnd()
+    ).pipe(
+      map((notification) => notification.event === SpeechEvent.Start)
+    );
+
+    this.errorMessage$ = merge(
+      this.speechRecognizer.onError(),
+      this.defaultError$
+    ).pipe(
+      map((data) => {
+        if(data === undefined) {
+          return '';
+        }
+        let message;
+        switch(data.error) {
+          case SpeechError.NotAllowed:
+            message = `Cannot run the demo.
+            Your browser is not authorized to access your microphone.
+            Verify that your browser has access to your microphone and try again.`;
+            break;
+          case SpeechError.NoSpeech:
+            message = `No speech has been detected. Please try again.`;
+            break;
+          case SpeechError.AudioCapture:
+            message = `Microphone is not available. Plese verify the connection of your microphone and try again.`;
+            break;
+          default:
+            message = '';
+            break;
+        }
+        return message;
+      })
+    )
   }
 }
