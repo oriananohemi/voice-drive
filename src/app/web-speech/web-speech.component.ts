@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { merge, Observable, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { defaultLanguage, languages } from '../shared/model/languages';
@@ -14,7 +15,7 @@ import { SpeechRecognizerService } from '../shared/services/web-apis/speech-reco
 })
 export class WebSpeechComponent implements OnInit {
   languages: string[] = languages;
-  currentLanguage: string = defaultLanguage;
+  currentLanguage = new FormControl(defaultLanguage);
   totalTranscript: string;
 
   transcript$: Observable<string>;
@@ -25,7 +26,7 @@ export class WebSpeechComponent implements OnInit {
   constructor(private speechRecognizer: SpeechRecognizerService) {}
 
   ngOnInit(): void {
-    this.speechRecognizer.initialize(this.currentLanguage);
+    this.speechRecognizer.initialize(this.currentLanguage.value);
     this.initRecognition();
   }
 
@@ -47,8 +48,8 @@ export class WebSpeechComponent implements OnInit {
     if (this.speechRecognizer.isListening) {
       this.stop();
     }
-    this.currentLanguage = language;
-    this.speechRecognizer.setLanguage(this.currentLanguage);
+    this.currentLanguage.setValue(language);
+    this.speechRecognizer.setLanguage(this.currentLanguage.value);
   }
 
   private initRecognition(): void {
