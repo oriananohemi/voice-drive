@@ -5,6 +5,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { WebSpeechModule } from './web-speech/web-speech.module';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { WebSpeechModule } from './web-speech/web-speech.module';
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    WebSpeechModule
+    WebSpeechModule,
+    SharedModule
   ],
   providers: [],
   bootstrap: [AppComponent]
