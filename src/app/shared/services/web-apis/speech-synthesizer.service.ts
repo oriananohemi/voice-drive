@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class SpeechSynthesizerService {
-  speechSynthesizer: SpeechSynthesisUtterance;
+  speechSynthesizer!: SpeechSynthesisUtterance;
 
   constructor() {
     this.initSynthesis();

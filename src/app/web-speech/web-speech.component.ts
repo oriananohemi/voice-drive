@@ -22,15 +22,15 @@ export class WebSpeechComponent implements OnInit {
   errorMessage$: Observable<string>;
   defaultError$ = new Subject<undefined>();
 
-  constructor(private speechRecognizer: SpeechRecognizerService) { }
+  constructor(private speechRecognizer: SpeechRecognizerService) {}
 
   ngOnInit(): void {
     this.speechRecognizer.initialize(this.currentLanguage);
-    // this.initRecognition()
+    this.initRecognition();
   }
 
   start(): void {
-    if(this.speechRecognizer.isListening) {
+    if (this.speechRecognizer.isListening) {
       this.stop();
       return;
     }
@@ -44,21 +44,20 @@ export class WebSpeechComponent implements OnInit {
   }
 
   selectLanguage(language: string): void {
-    if(this.speechRecognizer.isListening) {
-      this.stop()
+    if (this.speechRecognizer.isListening) {
+      this.stop();
     }
-
     this.currentLanguage = language;
-    this.speechRecognizer.setLanguage(this.currentLanguage)
+    this.speechRecognizer.setLanguage(this.currentLanguage);
   }
 
   private initRecognition(): void {
     this.transcript$ = this.speechRecognizer.onResult().pipe(
       tap((notification) => {
-        if(notification.event === SpeechEvent.FinalContent) {
-          this.totalTranscript = this.totalTranscript 
-          ? `${this.totalTranscript}\n${notification.content?.trim()}`
-          : notification.content;
+        if (notification.event === SpeechEvent.FinalContent) {
+          this.totalTranscript = this.totalTranscript
+            ? `${this.totalTranscript}\n${notification.content?.trim()}`
+            : notification.content;
         }
       }),
       map((notification) => notification.content || '')
@@ -76,11 +75,11 @@ export class WebSpeechComponent implements OnInit {
       this.defaultError$
     ).pipe(
       map((data) => {
-        if(data === undefined) {
+        if (data === undefined) {
           return '';
         }
         let message;
-        switch(data.error) {
+        switch (data.error) {
           case SpeechError.NotAllowed:
             message = `Cannot run the demo.
             Your browser is not authorized to access your microphone.
@@ -98,6 +97,6 @@ export class WebSpeechComponent implements OnInit {
         }
         return message;
       })
-    )
+    );
   }
 }

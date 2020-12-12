@@ -3,29 +3,35 @@ import { Observable } from 'rxjs';
 import { SpeechError } from '../../model/speech-error';
 import { SpeechEvent } from '../../model/speech-event';
 import { SpeechNotification } from '../../model/speech-notification';
+export interface IWindow extends Window {
+  webkitSpeechRecognition: any;
+}
+
+const {webkitSpeechRecognition} : IWindow = window as unknown as IWindow;
 
 @Injectable({
   providedIn: 'root'
 })
+
 export class SpeechRecognizerService {
   recognition: SpeechRecognition;
   language: string;
   isListening = false;
 
-  constructor() { }
+  constructor() {}
 
   initialize(language: string): void {
-    this.recognition =  new webkitSpeechRecognition();
+    this.recognition = new webkitSpeechRecognition();
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
-    this.setLanguage(language)
+    this.setLanguage(language);
   }
 
   setLanguage(language: string): void {
     this.language = language;
     this.recognition.lang = language;
   }
-  
+
   start(): void {
     this.recognition.start();
     this.isListening = true;
@@ -36,14 +42,15 @@ export class SpeechRecognizerService {
   }
 
   onStart(): Observable<SpeechNotification<never>> {
-    if(!this.recognition) {
-      this.initialize(this.language)
+    if (!this.recognition) {
+      this.initialize(this.language);
     }
+
     return new Observable(observer => {
       this.recognition.onstart = () => observer.next({
         event: SpeechEvent.Start
-      })
-    })
+      });
+    });
   }
 
   onEnd(): Observable<SpeechNotification<never>> {
@@ -53,8 +60,8 @@ export class SpeechRecognizerService {
           event: SpeechEvent.End
         });
         this.isListening = false;
-      }
-    })
+      };
+    });
   }
 
   onResult(): Observable<SpeechNotification<string>> {
@@ -63,8 +70,8 @@ export class SpeechRecognizerService {
         let interimContent = '';
         let finalContent = '';
 
-        for(let i = event.resultIndex; i< event.results.length; i++) {
-          if(event.results[i].isFinal) {
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
             finalContent += event.results[i][0].transcript;
             observer.next({
               event: SpeechEvent.FinalContent,
@@ -75,11 +82,11 @@ export class SpeechRecognizerService {
             observer.next({
               event: SpeechEvent.InterimContent,
               content: interimContent
-            })
+            });
           }
         }
-      }
-    })
+      };
+    });
   }
 
   onError(): Observable<SpeechNotification<never>> {
@@ -87,21 +94,25 @@ export class SpeechRecognizerService {
       this.recognition.onerror = (event) => {
         const eventError: string = (event as any).error;
         let error: SpeechError;
-        switch(eventError) {
+        switch (eventError) {
           case 'no-speech':
             error = SpeechError.NoSpeech;
             break;
           case 'audio-capture':
             error = SpeechError.AudioCapture;
             break;
+          case 'not-allowed':
+            error = SpeechError.NotAllowed;
+            break;
           default:
             error = SpeechError.Unknown;
             break;
         }
+
         observer.next({
           error
-        })
-      }
-    })
-  }
+        });
+      };
+    });
+  }  
 }
