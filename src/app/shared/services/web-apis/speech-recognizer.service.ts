@@ -1,30 +1,33 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { SpeechError } from '../../model/speech-error';
 import { SpeechEvent } from '../../model/speech-event';
 import { SpeechNotification } from '../../model/speech-notification';
-export interface IWindow extends Window {
+
+interface IWindow extends Window {
   webkitSpeechRecognition: any;
 }
 
-const {webkitSpeechRecognition} : IWindow = window as unknown as IWindow;
+const { webkitSpeechRecognition }: IWindow = window as unknown as IWindow;
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-
 export class SpeechRecognizerService {
   recognition: SpeechRecognition;
   language: string;
-  isListening = false;
+  listening$ = new BehaviorSubject<boolean>(false);
 
-  constructor() {}
+  initialize(language: string): boolean {
+    if ('webkitSpeechRecognition' in window) {
+      this.recognition = new webkitSpeechRecognition();
+      this.recognition.continuous = true;
+      this.recognition.interimResults = true;
+      this.setLanguage(language);
+      return true;
+    }
 
-  initialize(language: string): void {
-    this.recognition = new webkitSpeechRecognition();
-    this.recognition.continuous = true;
-    this.recognition.interimResults = true;
-    this.setLanguage(language);
+    return false;
   }
 
   setLanguage(language: string): void {
@@ -33,14 +36,19 @@ export class SpeechRecognizerService {
   }
 
   start(): void {
-    this.recognition.start();
-    this.isListening = true;
-  }
+    if (!this.recognition) {
+      return;
+    }
 
+    this.recognition.start();
+    this.listening$.next(true);
+  }
+  
   stop(): void {
     this.recognition.stop();
+    this.listening$.next(false);
   }
-
+  
   onStart(): Observable<SpeechNotification<never>> {
     if (!this.recognition) {
       this.initialize(this.language);
@@ -52,15 +60,14 @@ export class SpeechRecognizerService {
       });
     });
   }
-
+  
   onEnd(): Observable<SpeechNotification<never>> {
     return new Observable(observer => {
       this.recognition.onend = () => {
-        observer.next({
-          event: SpeechEvent.End
-        });
-        this.isListening = false;
-      };
+          observer.next({
+            event: SpeechEvent.End
+          });
+          this.listening$.next(false) };
     });
   }
 
@@ -73,46 +80,44 @@ export class SpeechRecognizerService {
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
             finalContent += event.results[i][0].transcript;
-            observer.next({
-              event: SpeechEvent.FinalContent,
-              content: finalContent
-            });
+              observer.next({
+                event: SpeechEvent.FinalContent,
+                content: finalContent
+              });
           } else {
             interimContent += event.results[i][0].transcript;
-            observer.next({
-              event: SpeechEvent.InterimContent,
-              content: interimContent
-            });
+              observer.next({
+                event: SpeechEvent.InterimContent,
+                content: interimContent
+              });
           }
         }
       };
     });
   }
 
-  onError(): Observable<SpeechNotification<never>> {
-    return new Observable(observer => {
-      this.recognition.onerror = (event) => {
-        const eventError: string = (event as any).error;
-        let error: SpeechError;
-        switch (eventError) {
+  onError(): Observable<SpeechNotification<SpeechError>> {
+    return new Observable<SpeechNotification<SpeechError>>(observer => {
+      this.recognition.onerror = ({ error }: ErrorEvent) => {
+        let message: SpeechError;
+
+        switch (error) {
           case 'no-speech':
-            error = SpeechError.NoSpeech;
+            message = SpeechError.NoSpeech;
             break;
           case 'audio-capture':
-            error = SpeechError.AudioCapture;
+            message = SpeechError.AudioCapture;
             break;
           case 'not-allowed':
-            error = SpeechError.NotAllowed;
+            message = SpeechError.NotAllowed;
             break;
           default:
-            error = SpeechError.Unknown;
+            message = SpeechError.Unknown;
             break;
         }
 
-        observer.next({
-          error
-        });
+          observer.next({ error });
       };
     });
-  }  
+  }
 }

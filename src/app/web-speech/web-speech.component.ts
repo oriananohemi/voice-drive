@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { merge, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { defaultLanguage, languages } from '../shared/model/languages';
-import { SpeechError } from '../shared/model/speech-error';
+import { SpeechErrorMessage } from '../shared/model/speech-error';
 import { SpeechEvent } from '../shared/model/speech-event';
+import { SpeechNotification } from '../shared/model/speech-notification';
 import { SpeechRecognizerService } from '../shared/services/web-apis/speech-recognizer.service';
+import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-web-speech',
@@ -19,24 +20,28 @@ export class WebSpeechComponent implements OnInit {
   totalTranscript = new FormControl('');
 
   transcript$: Observable<string>;
-  listening$: Observable<boolean>;
-  errorMessage$: Observable<string>;
-  defaultError$ = new Subject<undefined>();
+  listening$: BehaviorSubject<boolean>;
+  error$: Observable<string>;
 
-  constructor(private speechRecognizer: SpeechRecognizerService) {}
+  constructor(private readonly speechRecognizer: SpeechRecognizerService) {
+    this.listening$ = this.speechRecognizer.listening$;
+  }
 
   ngOnInit(): void {
-    this.speechRecognizer.initialize(this.currentLanguage.value);
-    this.initRecognition();
+    const browserHaveSpeechAPI = this.speechRecognizer.initialize(this.currentLanguage.value);
+    if (browserHaveSpeechAPI) {
+      this.initRecognition();
+    }else {
+      this.error$ = of('Your Browser is not supported. Please try Google Chrome.');
+    }
   }
 
   start(): void {
-    if (this.speechRecognizer.isListening) {
+    if (this.listening$.getValue()) {
       this.stop();
       return;
     }
 
-    this.defaultError$.next(undefined);
     this.speechRecognizer.start();
   }
 
@@ -45,7 +50,7 @@ export class WebSpeechComponent implements OnInit {
   }
 
   selectLanguage(language: string): void {
-    if (this.speechRecognizer.isListening) {
+    if (this.listening$.getValue()) {
       this.stop();
     }
     this.currentLanguage.setValue(language);
@@ -55,50 +60,18 @@ export class WebSpeechComponent implements OnInit {
   private initRecognition(): void {
     this.transcript$ = this.speechRecognizer.onResult().pipe(
       tap((notification) => {
-        if (notification.event === SpeechEvent.FinalContent) {
-          const transcript = this.totalTranscript.value
-          ? `${this.totalTranscript.value}\n${notification.content?.trim()}`
-          : notification.content;
-          this.totalTranscript.setValue(transcript);
-        }
+        this.error$ = this.speechRecognizer.onError().pipe(map(({ error }: SpeechNotification<string>) => SpeechErrorMessage[error]));
+        this.processNotification(notification);
       }),
-      map((notification) => notification.content || '')
+      map(({ content }: SpeechNotification<string>) => content)
     );
 
-    this.listening$ = merge(
-      this.speechRecognizer.onStart(),
-      this.speechRecognizer.onEnd()
-    ).pipe(
-      map((notification) => notification.event === SpeechEvent.Start)
-    );
+    this.error$ = this.speechRecognizer.onError().pipe(map(({ error }: SpeechNotification<string>) => SpeechErrorMessage[error]));
+  }
 
-    this.errorMessage$ = merge(
-      this.speechRecognizer.onError(),
-      this.defaultError$
-    ).pipe(
-      map((data) => {
-        if (data === undefined) {
-          return '';
-        }
-        let message;
-        switch (data.error) {
-          case SpeechError.NotAllowed:
-            message = `Cannot run the demo.
-            Your browser is not authorized to access your microphone.
-            Verify that your browser has access to your microphone and try again.`;
-            break;
-          case SpeechError.NoSpeech:
-            message = `No speech has been detected. Please try again.`;
-            break;
-          case SpeechError.AudioCapture:
-            message = `Microphone is not available. Plese verify the connection of your microphone and try again.`;
-            break;
-          default:
-            message = '';
-            break;
-        }
-        return message;
-      })
-    );
+  processNotification({ event, content}: SpeechNotification<string>): void {
+    if (event === SpeechEvent.FinalContent || event === SpeechEvent.InterimContent) {
+      this.totalTranscript.setValue(content.trim())
+    }
   }
 }
