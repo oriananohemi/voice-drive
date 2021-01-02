@@ -4,7 +4,6 @@ import { WebSpeechComponent } from './web-speech.component';
 import { SharedModule } from '../shared/shared.module';
 import { WebSpeechRoutingModule } from './web-speech-routing.module';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MaterialModule } from '../material/material.module';
 @NgModule({
   declarations: [WebSpeechComponent],
   imports: [
@@ -12,7 +11,6 @@ import { MaterialModule } from '../material/material.module';
     CommonModule,
     SharedModule,
     ReactiveFormsModule,
-    MaterialModule
   ]
 })
 export class WebSpeechModule { }
