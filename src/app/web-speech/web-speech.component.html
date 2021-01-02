@@ -1,10 +1,8 @@
-<pre>
-  {{ listening$ | async | json }}
-</pre>
+
+<mat-card *ngIf="listening$.value === true">Grabando</mat-card>
 <div class="web-speech-container">
   <section>
     <mat-card *ngIf="error$| async as errorMessage" class="notification">{{errorMessage}}</mat-card>
-
   </section>
   <section>
     <mat-form-field>
