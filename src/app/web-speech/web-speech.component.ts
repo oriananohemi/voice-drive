@@ -4,6 +4,7 @@ import { map, tap } from 'rxjs/operators';
 import { defaultLanguage, languages } from '../shared/model/languages';
 import { SpeechErrorMessage } from '../shared/model/speech-error';
 import { SpeechEvent } from '../shared/model/speech-event';
+import { ActionContext } from '../shared/services/action/action-context/action-context';
 import { SpeechNotification } from '../shared/model/speech-notification';
 import { SpeechRecognizerService } from '../shared/services/web-apis/speech-recognizer.service';
 import { FormControl } from '@angular/forms';
@@ -23,7 +24,7 @@ export class WebSpeechComponent implements OnInit {
   listening$: BehaviorSubject<boolean>;
   error$: Observable<string>;
 
-  constructor(private readonly speechRecognizer: SpeechRecognizerService) {
+  constructor(private readonly speechRecognizer: SpeechRecognizerService, private actionContext: ActionContext) {
     this.listening$ = this.speechRecognizer.listening$;
   }
 
@@ -50,6 +51,7 @@ export class WebSpeechComponent implements OnInit {
   }
 
   selectLanguage(language: string): void {
+    console.log(language)
     if (this.listening$.getValue()) {
       this.stop();
     }
@@ -71,6 +73,7 @@ export class WebSpeechComponent implements OnInit {
 
   processNotification({ event, content}: SpeechNotification<string>): void {
     if (event === SpeechEvent.FinalContent || event === SpeechEvent.InterimContent) {
+      this.actionContext.processMessage(content, this.currentLanguage.value);
       this.totalTranscript.setValue(content.trim())
     }
   }
