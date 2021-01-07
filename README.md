@@ -1,27 +1,31 @@
 # VoiceDrive
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.1.7.
+Aplicacion impulsada por voz. Realizada con el tutorial de [luixaviles](https://github.com/luixaviles)
 
-## Development server
+Este proyecto fue creado con [Angular CLI](https://github.com/angular/angular-cli) version 10.1.7 y la [API Web Speech](https://developer.mozilla.org/es/docs/Web/API/Web_Speech_API/Uso_de_la_Web_Speech_API)
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+[Demo del Proyecto](https://oriananohemi.github.io/voice-driven/)
 
-## Code scaffolding
+<img src="src/assets/images/demo.png">
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Instrucciones
 
-## Build
+Presione el microfono para que la aplicacion digite lo que usted le dicta, cuando ya no desee seguir hablando vuelva a presionar el microfono.
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
 
-## Running unit tests
+**Para cambiar el tema**
+      1- Presione el microfono y diga *"Iniciar cambio de tema"*
+      2- Presione de nuevo el microfono y diga alguna de las siguientes opciones: *"azul", "rosa", "purpura", "verde"*
+      3- Para finalizar el cambio: *"Finalizar cambio de tema"*
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+**Recuerde que al finalizar una instruccion debe presionar el microfono para que la aplicacion deje de grabar**
+## Scripts
+### Para ejecutar el proyecto
 
-## Running end-to-end tests
+Clone el repositorio
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+Instale las dependencias con el comando "npm install"
 
-## Further help
+Puedes ejecutar el comando "ng serve"
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+Se abrira una pestaña en el browser http://localhost:4200/
