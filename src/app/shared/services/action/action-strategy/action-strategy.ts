@@ -13,7 +13,7 @@ export abstract class ActionStrategy {
 
   constructor() {
     this.mapFinishResponse.set('en-US', 'Your action has been completed.');
-    this.mapFinishResponse.set('es-ES', 'La accion ha sido finalizada.');
+    this.mapFinishResponse.set('es-ES', 'La acción ha sido finalizada.');
   }
 
   getStartSignal(language: string): string {
